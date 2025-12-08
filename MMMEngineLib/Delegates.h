@@ -1,26 +1,16 @@
 #pragma once
-#include "delegates/include/delegates/delegates.h"
+#include "fast_delegate/MultiCastDelegate.h"
 
-using namespace delegates;
+using namespace SA;
 
 namespace MMMEngine
 {	
-	template<typename... Args>
-	struct ActionSignature
-	{
-		using type = void(Args...);
-	};
+	template<typename T>
+	using Delegate = SA::multicast_delegate<T>;
 
-	template<typename...Args>
-	using Action = delegate<typename ActionSignature<Args...>::type>;
-	
-	
-	template<typename R, typename... Args>
-	struct FuncSignature
-	{
-		using type = R(Args...);
-	};
+    template<typename... Args>
+    using Action = SA::multicast_delegate<void(Args...)>;
 
-	template<typename R, typename... Args>
-	using Func = delegates::delegate<typename FuncSignature<R, Args...>::type>;
+    template<typename T, typename... Args>
+    using Func = SA::multicast_delegate<T(Args...)>;
 }
