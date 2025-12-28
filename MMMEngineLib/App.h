@@ -2,7 +2,7 @@
 #include <Windows.h>
 #include <string>
 
-#include "Delegates.h"
+#include "Delegates.hpp"
 
 namespace MMMEngine
 {
