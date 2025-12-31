@@ -5,8 +5,6 @@
 
 using namespace rttr;
 
-#include "IDispose.h"
-
 namespace MMMEngine
 {
 	RTTR_REGISTRATION
@@ -23,20 +21,16 @@ namespace MMMEngine
 		uint32_t gen;
 	};
 
-	class Object : public IDispose
+	class Object
 	{
 	private:
 		static uint64_t s_nextInstanceID;
 		uint64_t		m_instanceID;
 		bool			m_isDestroyed = false;
 
-		const ObjectHandle m_handle;
-
 		void MarkDestory() { m_isDestroyed = true; }
 	protected:
 		std::string m_name;
-
-		virtual void Dispose() override {}
 
 		Object() : m_instanceID(s_nextInstanceID++)
 		{
@@ -50,8 +44,6 @@ namespace MMMEngine
 		inline const std::string&	GetName()		const { return m_name; }
 
 		inline bool					IsDestroyed()	const { return m_isDestroyed; }
-
-		inline ObjectHandle 		GetHandle()		const { return m_handle; }
 
 		inline void					SetName(const std::string& name) { m_name = name; }
 	};
