@@ -16,8 +16,6 @@ RTTR_REGISTRATION
 	registration::method("f", &f);
 }
 
-
-
 void Render() { std::cout << "drawcall" << std::endl; }
 
 class Test

@@ -80,7 +80,9 @@ namespace MMMEngine
 		std::string ToUpperString() const {
 			std::string str = ToString();
 			for (char& c : str) {
-				c = std::toupper(c);
+				c = static_cast<char>(
+					std::toupper(static_cast<unsigned char>(c))
+					);
 			}
 			return str;
 		}
