@@ -35,24 +35,6 @@ namespace MMMEngine
 
         void ProcessPendingDestroy();
 
-        // PtrID로 Ptr 복원 (직렬화용)
-        template<typename T>
-        ObjectPtr<T> GetPtr(uint32_t ptrID)
-        {
-            if (ptrID >= m_objectPtrInfos.size())
-                return ObjectPtr<T>();
-
-            Object* obj = m_objectPtrInfos[ptrID].raw;
-            if (!obj || obj->IsDestroyed())
-                return ObjectPtr<T>();
-
-            T* typedObj = dynamic_cast<T*>(obj);
-            if (!typedObj)
-                return ObjectPtr<T>();
-
-            uint32_t generation = m_objectPtrInfos[ptrID].ptrGenerations;
-            return ObjectPtr<T>(typedObj, ptrID, generation);
-        }
     public:
         bool IsCreatingObject() const;
 
@@ -89,6 +71,31 @@ namespace MMMEngine
         };
 
         bool IsValidPtr(uint32_t ptrID, uint32_t generation, const Object* ptr) const;
+
+        template<typename T>
+        ObjectPtr<T> GetPtrFast(Object* raw, uint32_t ptrID, uint32_t ptrGen)
+        {
+            return ObjectPtr<T>(static_cast<T*>(raw), ptrID, ptrGen);
+        }
+
+        template<typename T>
+        ObjectPtr<T> GetPtr(uint32_t ptrID)
+        {
+            if (ptrID >= m_objectPtrInfos.size())
+                return ObjectPtr<T>();
+
+            Object* obj = m_objectPtrInfos[ptrID].raw;
+            if (!obj || obj->IsDestroyed())
+                return ObjectPtr<T>();
+
+#ifndef NDEBUG
+            T* typedObj = dynamic_cast<T*>(obj);
+            assert(typedObj && "GetPtr<T>: 타입 불일치! ptrID에 들어있는 실제 타입을 확인하세요.");
+#endif
+
+            uint32_t generation = m_objectPtrInfos[ptrID].ptrGenerations;
+            return ObjectPtr<T>(static_cast<T*>(obj), ptrID, generation);
+        }
 
         template<typename T>
         ObjectPtr<T> FindObjectByType()
@@ -140,14 +147,14 @@ namespace MMMEngine
 
             T* newObj = new T(std::forward<Args>(args)...);
             uint32_t ptrID;
-            uint32_t generation;
+            uint32_t ptrGen;
 
             if (m_freePtrIDs.empty())
             {
                 // 새 슬롯 할당
                 ptrID = static_cast<uint32_t>(m_objectPtrInfos.size());
                 m_objectPtrInfos.push_back({ newObj,0,0 });
-                generation = 0;
+                ptrGen = 0;
             }
             else
             {
@@ -155,10 +162,12 @@ namespace MMMEngine
                 ptrID = m_freePtrIDs.front();
                 m_freePtrIDs.pop();
                 m_objectPtrInfos[ptrID].raw = newObj;
-                generation = ++m_objectPtrInfos[ptrID].ptrGenerations;
+                ptrGen = ++m_objectPtrInfos[ptrID].ptrGenerations;
             }
-
-            return ObjectPtr<T>(newObj, ptrID, generation);
+            auto baseObj = static_cast<Object*>(newObj);
+            baseObj->m_ptrID = ptrID;
+            baseObj->m_ptrGen = ptrGen;
+            return ObjectPtr<T>(newObj, ptrID, ptrGen);
         }
 
         void Destroy(const ObjectPtrBase& objPtr, float delayTime = 0.0f);

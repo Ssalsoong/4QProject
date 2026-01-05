@@ -28,7 +28,7 @@ RTTR_REGISTRATION
 	registration::class_<ObjectPtr<Object>>("ObjectPtr<Object>")
 		.constructor<>(
 			[]() {
-				return Object::CreateInstance<Object>();
+				return Object::CreatePtr<Object>();
 			}, registration::protected_access);
 }
 
@@ -44,6 +44,8 @@ MMMEngine::Object::Object() : m_instanceID(s_nextInstanceID++)
 
 	m_name = "<Unnamed> [ Instance ID : " + std::to_string(m_instanceID) + " ]";
 	m_guid = GUID::NewGuid();
+	m_ptrID = UINT32_MAX;
+	m_ptrGen = 0;
 }
 
 MMMEngine::Object::~Object()

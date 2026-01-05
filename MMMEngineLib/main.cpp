@@ -24,17 +24,30 @@ public:
 	void Foo() { std::cout << "Foo called" << std::endl; }
 };
 
+class RollObject;
 class FooObject : public Object
 {
 public:
+	ObjectPtr<RollObject> pRollObj;
 	void Foo()
 	{
-		auto inst = CreateInstance<GameObject>();
+		auto inst = CreatePtr<GameObject>();
 		if (inst)
 		{
 			std::cout << GetName() << std::endl;
 			std::cout << inst->GetName() << std::endl;
 		}
+	}
+};
+
+class RollObject : public Object
+{
+public:
+	void A()
+	{
+		auto FooPtr = FindObjectByType<FooObject>();
+		FooPtr->pRollObj = SelfPtr(this);
+		FooPtr->pRollObj->SetName("watashiga tenni tatsu");
 	}
 };
 
@@ -62,7 +75,7 @@ int main()
 	type::invoke("f", {});
 
 	std::cout << "Generated GUID: " << id.ToString() << std::endl;
-	auto FooObj = Object::CreateInstance<FooObject>();
+	auto FooObj = Object::CreatePtr<FooObject>();
 	FooObj->Foo();
 
 	type class_type = type::get_by_name("ObjectPtr<GameObject>");
@@ -80,6 +93,12 @@ int main()
 		else
 			std::cout << "Destroyed!" << std::endl;
 	}
+
+	
+
+	auto a = Object::CreatePtr<RollObject>();
+	if(a) // È¤Àº a.IsValid()
+		a->A();
 
 	auto founds = Object::FindObjectsByType<Object>();
 

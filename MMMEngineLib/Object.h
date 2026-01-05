@@ -2,6 +2,7 @@
 #include "rttr/type"
 #include "rttr/registration_friend.h"
 #include "GUID.h"
+#include <type_traits>
 #include <cassert>
 
 namespace MMMEngine
@@ -21,6 +22,8 @@ namespace MMMEngine
 
 		static uint64_t s_nextInstanceID;
 
+        uint32_t        m_ptrID;
+        uint32_t        m_ptrGen;
 		uint64_t		m_instanceID;
 		std::string		m_name;
 		GUID			m_guid;
@@ -33,12 +36,15 @@ namespace MMMEngine
 	protected:
         Object();
         virtual ~Object();
+
+        template<typename T>
+        ObjectPtr<T> SelfPtr(T* self);
 	public:
 		Object(const Object&) = delete;
 		Object& operator=(const Object&) = delete;
 
 		template<typename T, typename ...Args>
-        static ObjectPtr<T> CreateInstance(Args && ...args);
+        static ObjectPtr<T> CreatePtr(Args && ...args);
 
         template<typename T>
         static ObjectPtr<T> FindObjectByType();
@@ -124,6 +130,48 @@ namespace MMMEngine
         ObjectPtr(ObjectPtr&&) noexcept = default;
         ObjectPtr& operator=(const ObjectPtr&) = default;
         ObjectPtr& operator=(ObjectPtr&&) noexcept = default;
+
+
+        template<typename U,
+            typename std::enable_if<std::is_base_of<T, U>::value, int>::type = 0>
+        ObjectPtr(const ObjectPtr<U>& other)
+            : m_raw(static_cast<T*>(other.m_raw))
+            , m_ptrID(other.m_ptrID)
+            , m_ptrGeneration(other.m_ptrGeneration)
+        {
+        }
+
+        template<typename U,
+            typename std::enable_if<std::is_base_of<T, U>::value, int>::type = 0>
+        ObjectPtr& operator=(const ObjectPtr<U>& other)
+        {
+            m_raw = static_cast<T*>(other.m_raw);
+            m_ptrID = other.m_ptrID;
+            m_ptrGeneration = other.m_ptrGeneration;
+            return *this;
+        }
+
+        template<typename U>
+        ObjectPtr<U> As() const
+        {
+            static_assert(std::is_base_of_v<Object, U>,
+                "As<T>()의 T는 Object를 상속해야 합니다.");
+
+            // null 핸들
+            if (m_ptrID == UINT32_MAX)
+                return {};
+
+            // 세대/ID 유효성
+            if (!IsValid())
+                return {};
+
+            // 런타임 타입 검사
+            U* casted = dynamic_cast<U*>(m_raw);
+            if (!casted)
+                return {};
+
+            return ObjectPtr<U>(casted, m_ptrID, m_ptrGeneration);
+        }
 
         T& operator*() const 
         {

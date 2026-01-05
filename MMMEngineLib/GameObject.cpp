@@ -13,7 +13,7 @@ RTTR_REGISTRATION
 	registration::class_<ObjectPtr<GameObject>>("ObjectPtr<GameObject>")
         .constructor<>(
 			[]() {
-				return Object::CreateInstance<GameObject>();
+				return Object::CreatePtr<GameObject>();
 			}, registration::protected_access
         );
 }
