@@ -17,16 +17,13 @@ namespace MMMEngine
             uint32_t ptrGenerations = 0;
 
             float destroyRemainTime = -1.0f;
-            bool destroyScheduled = false;
-            bool destroyPending = false;     
+            bool destroyScheduled = false;  
         };
 
         friend class App;
 
         static inline thread_local bool m_isCreatingObject;
         static inline thread_local bool m_isDestroyingObject;
-
-        mutable std::mutex m_mutex;
 
         std::vector<ObjectPtrInfo> m_objectPtrInfos;
         std::queue<uint32_t> m_freePtrIDs;
@@ -56,10 +53,9 @@ namespace MMMEngine
             uint32_t generation = m_objectPtrInfos[ptrID].ptrGenerations;
             return ObjectPtr<T>(typedObj, ptrID, generation);
         }
-
-        size_t GetObjectCount() const;
     public:
         bool IsCreatingObject() const;
+
 
         bool IsDestroyingObject() const;
 
@@ -94,13 +90,51 @@ namespace MMMEngine
 
         bool IsValidPtr(uint32_t ptrID, uint32_t generation, const Object* ptr) const;
 
+        template<typename T>
+        ObjectPtr<T> FindObjectByType()
+        {
+            for (uint32_t i = 0; i < m_objectPtrInfos.size(); ++i)
+            {
+                auto& info = m_objectPtrInfos[i];
+                if (!IsValidPtr(i, info.ptrGenerations, info.raw))
+                    continue;
+
+                auto obj = info.raw;
+                if (T* castedObj = dynamic_cast<T*>(obj))
+                {
+                    return ObjectPtr<T>(castedObj, i, info.ptrGenerations);
+                }
+            }
+
+            return ObjectPtr<T>();
+        }
+
+        template<typename T>
+        std::vector<ObjectPtr<T>> FindObjectsByType()
+        {
+            std::vector<ObjectPtr<T>> objects;
+
+            for (uint32_t i = 0; i < m_objectPtrInfos.size(); ++i)
+            {
+                auto& info = m_objectPtrInfos[i];
+                if (!IsValidPtr(i, info.ptrGenerations, info.raw))
+                    continue;
+
+                auto obj = info.raw;
+                if (T* castedObj = dynamic_cast<T*>(obj))
+                {
+                    objects.emplace_back(ObjectPtr<T>(castedObj, i, info.ptrGenerations));
+                }
+            }
+
+            return objects;
+        }
+
         template<typename T, typename... Args>
         ObjectPtr<T> CreatePtr(Args&&... args)
         {
             static_assert(std::is_base_of_v<Object, T>, "T는 반드시 Object를 상속받아야 합니다.");
             static_assert(!std::is_abstract_v<T>, "추상적인 Object는 만들 수 없습니다.");
-
-            std::lock_guard<std::mutex> lock(m_mutex);
 
             CreationScope scope;
 

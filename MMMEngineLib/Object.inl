@@ -11,13 +11,13 @@ namespace MMMEngine
     }
 
     template<typename T>
-    bool MMMEngine::ObjectPtr<T>::IsValid() const
+    bool ObjectPtr<T>::IsValid() const
     {
         return ObjectManager::Get().IsValidPtr(m_ptrID, m_ptrGeneration, m_raw);
     }
 
     template<typename T>
-    bool MMMEngine::ObjectPtr<T>::IsSameObject(const ObjectPtrBase& other) const
+    bool ObjectPtr<T>::IsSameObject(const ObjectPtrBase& other) const
     {
         if (m_ptrID != other.GetPtrID() ||
             m_ptrGeneration != other.GetPtrGeneration())
@@ -29,5 +29,18 @@ namespace MMMEngine
                 other.GetPtrGeneration(),
                 other.GetBase()
             );
+    }
+
+
+    template<typename T>
+    ObjectPtr<T> Object::FindObjectByType()
+    {
+        return ObjectManager::Get().FindObjectByType<T>();
+    }
+
+    template<typename T>
+    std::vector<ObjectPtr<T>> Object::FindObjectsByType()
+    {
+        return ObjectManager::Get().FindObjectsByType<T>();
     }
 }

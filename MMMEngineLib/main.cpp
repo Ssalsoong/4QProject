@@ -81,5 +81,12 @@ int main()
 			std::cout << "Destroyed!" << std::endl;
 	}
 
+	auto founds = Object::FindObjectsByType<Object>();
+
+	for (auto& f : founds)
+	{
+		std::cout << f->GetName() << std::endl;
+	}
+
 	return 0;
 }

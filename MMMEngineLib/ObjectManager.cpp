@@ -2,8 +2,6 @@
 
 void MMMEngine::ObjectManager::Update(float deltaTime)
 {
-    std::lock_guard<std::mutex> lock(m_mutex);
-
     size_t i = 0;
     while (i < m_delayedDestroy.size())
     {
@@ -16,7 +14,7 @@ void MMMEngine::ObjectManager::Update(float deltaTime)
         }
 
         auto& info = m_objectPtrInfos[id];
-        if (!info.raw || info.destroyPending || info.destroyRemainTime < 0.0f)
+        if (!info.raw || info.raw->IsDestroyed() || info.destroyRemainTime < 0.0f)
         {
             info.destroyScheduled = false;
             info.destroyRemainTime = -1.0f;
@@ -29,7 +27,6 @@ void MMMEngine::ObjectManager::Update(float deltaTime)
 
         if (info.destroyRemainTime <= 0.0f)
         {
-            info.destroyPending = true;
             m_pendingDestroy.push_back(id);
 
             // 파괴 직전에 destroyed 상태로 전환
@@ -50,42 +47,23 @@ void MMMEngine::ObjectManager::Update(float deltaTime)
 
 void MMMEngine::ObjectManager::ProcessPendingDestroy()
 {
-    std::lock_guard<std::mutex> lock(m_mutex);
     DestroyScope scope;
 
-    for (uint32_t id : m_pendingDestroy)
+    for (uint32_t ptrID : m_pendingDestroy)
     {
-        if (id >= m_objectPtrInfos.size())
+        if (ptrID >= m_objectPtrInfos.size())
             continue;
 
-        auto& info = m_objectPtrInfos[id];
-        Object* obj = info.raw;
+        Object* obj = m_objectPtrInfos[ptrID].raw;
         if (!obj)
             continue;
 
         delete obj;
-        info.raw = nullptr;
-        info.destroyPending = false;
-        info.destroyRemainTime = -1.0f;
-        info.destroyScheduled = false;
-
-        m_freePtrIDs.push(id);
+        m_objectPtrInfos[ptrID].raw = nullptr;
+        m_freePtrIDs.push(ptrID);
     }
 
     m_pendingDestroy.clear();
-}
-
-size_t MMMEngine::ObjectManager::GetObjectCount() const
-{
-    size_t count = 0;
-    for (const ObjectPtrInfo& info : m_objectPtrInfos)
-    {
-        auto& obj = info.raw;
-        if (obj && !obj->IsDestroyed())
-            count++;
-    }
-        
-    return count;
 }
 
 bool MMMEngine::ObjectManager::IsCreatingObject() const
@@ -120,16 +98,10 @@ void MMMEngine::ObjectManager::Destroy(const ObjectPtrBase& objPtr, float delayT
     if (!objPtr.IsValid())
         return;
 
-    std::lock_guard<std::mutex> lock(m_mutex);
-
     auto id = objPtr.GetPtrID();
     auto& info = m_objectPtrInfos[id];
-    if (info.destroyPending)
-        return;
-
     if (delayTime <= 0.0f)
     {
-        info.destroyPending = true;
         m_pendingDestroy.push_back(id);
         info.raw->MarkDestroy();
         return;
@@ -167,7 +139,6 @@ MMMEngine::ObjectManager::~ObjectManager()
             info.ptrGenerations = 0;
             info.destroyRemainTime = -1.0f;
             info.destroyScheduled = false;
-            info.destroyPending = false;
         }
     }
 }

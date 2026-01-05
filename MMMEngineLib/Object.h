@@ -40,6 +40,14 @@ namespace MMMEngine
 		template<typename T, typename ...Args>
         static ObjectPtr<T> CreateInstance(Args && ...args);
 
+        template<typename T>
+        static ObjectPtr<T> FindObjectByType();
+
+        template<typename T>
+        static std::vector<ObjectPtr<T>> FindObjectsByType();
+
+        static void DontDestroyOnLoad(const ObjectPtrBase& objPtr);
+
 		static void Destroy(const ObjectPtrBase& objPtr, float delay = 0.0f);
 
 		inline uint64_t				GetInstanceID() const { return m_instanceID; }
