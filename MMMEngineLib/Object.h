@@ -77,6 +77,8 @@ namespace MMMEngine
         friend class ObjectManager;
         friend class ObjectSerializer;
 
+        virtual void Reset() = 0;
+
         virtual Object* GetBase() const = 0;
     public:
         virtual uint32_t    GetPtrID() const = 0;
@@ -123,6 +125,7 @@ namespace MMMEngine
 
     public:
         // 기본 생성자 (null handle)
+        ObjectPtr(std::nullptr_t) { Reset(); }
         ObjectPtr() = default;
 
         // 복사/이동은 허용
@@ -131,6 +134,7 @@ namespace MMMEngine
         ObjectPtr& operator=(const ObjectPtr&) = default;
         ObjectPtr& operator=(ObjectPtr&&) noexcept = default;
 
+        virtual void Reset() override { m_raw = nullptr; m_ptrID = UINT32_MAX; m_ptrGeneration = 0; }
 
         template<typename U,
             typename std::enable_if<std::is_base_of<T, U>::value, int>::type = 0>

@@ -4,6 +4,7 @@
 
 namespace MMMEngine
 {
+	class GameObject;
 	class Component : public Object
 	{
 	private:
@@ -12,6 +13,8 @@ namespace MMMEngine
 		friend class GameObject;
 		RTTR_ENABLE(MMMEngine::Object)
 		RTTR_REGISTRATION_FRIEND
+
+		ObjectPtr<GameObject> m_owner;
 	protected:
 		Component() = default;
 	public:

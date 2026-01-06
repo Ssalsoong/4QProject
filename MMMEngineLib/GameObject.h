@@ -2,11 +2,11 @@
 #include "Object.h"
 #include "rttr/type"
 #include <vector>
-#include "Component.h"
+#include <Component.h>
+//#include <Transform.h>
 
 namespace MMMEngine
 {
-	//class Transform;
 	class GameObject : public Object
 	{
 	private:

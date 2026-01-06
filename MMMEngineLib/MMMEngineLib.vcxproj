@@ -108,7 +108,7 @@
       <ConformanceMode>Default</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <LanguageStandard_C>Default</LanguageStandard_C>
-      <AdditionalIncludeDirectories>$(ProjectDir)￦rttr\..;$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)rttr\..;$(ProjectDir);$(ProjectDir)dxtk\Inc;$(ProjectDir)dxtk;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <InlineFunctionExpansion>Disabled</InlineFunctionExpansion>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
@@ -150,6 +150,27 @@
     <ClInclude Include="App.h" />
     <ClInclude Include="Component.h" />
     <ClInclude Include="Delegates.hpp" />
+    <ClInclude Include="dxtk\Inc\Audio.h" />
+    <ClInclude Include="dxtk\Inc\BufferHelpers.h" />
+    <ClInclude Include="dxtk\Inc\CommonStates.h" />
+    <ClInclude Include="dxtk\Inc\DDSTextureLoader.h" />
+    <ClInclude Include="dxtk\Inc\DirectXHelpers.h" />
+    <ClInclude Include="dxtk\Inc\Effects.h" />
+    <ClInclude Include="dxtk\Inc\GamePad.h" />
+    <ClInclude Include="dxtk\Inc\GeometricPrimitive.h" />
+    <ClInclude Include="dxtk\Inc\GraphicsMemory.h" />
+    <ClInclude Include="dxtk\Inc\Keyboard.h" />
+    <ClInclude Include="dxtk\Inc\Model.h" />
+    <ClInclude Include="dxtk\Inc\Mouse.h" />
+    <ClInclude Include="dxtk\Inc\PostProcess.h" />
+    <ClInclude Include="dxtk\Inc\PrimitiveBatch.h" />
+    <ClInclude Include="dxtk\Inc\ScreenGrab.h" />
+    <ClInclude Include="dxtk\Inc\SimpleMath.h" />
+    <ClInclude Include="dxtk\Inc\SpriteBatch.h" />
+    <ClInclude Include="dxtk\Inc\SpriteFont.h" />
+    <ClInclude Include="dxtk\Inc\VertexTypes.h" />
+    <ClInclude Include="dxtk\Inc\WICTextureLoader.h" />
+    <ClInclude Include="dxtk\Inc\XboxDDSTextureLoader.h" />
     <ClInclude Include="GameObject.h" />
     <ClInclude Include="GUID.h" />
     <ClInclude Include="Object.h" />
@@ -284,9 +305,11 @@
     <ClInclude Include="rttr\variant_sequential_view.h" />
     <ClInclude Include="rttr\wrapper_mapper.h" />
     <ClInclude Include="Singleton.hpp" />
+    <ClInclude Include="Transform.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="App.cpp" />
+    <ClCompile Include="dxtk\Src\SimpleMath.cpp" />
     <ClCompile Include="GameObject.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Object.cpp" />
@@ -323,8 +346,10 @@
     <ClCompile Include="rttr\variant.cpp" />
     <ClCompile Include="rttr\variant_associative_view.cpp" />
     <ClCompile Include="rttr\variant_sequential_view.cpp" />
+    <ClCompile Include="Transform.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="dxtk\Inc\SimpleMath.inl" />
     <None Include="Object.inl" />
     <None Include="rttr\registration" />
     <None Include="rttr\registration_friend" />

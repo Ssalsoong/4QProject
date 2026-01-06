@@ -31,6 +31,8 @@ public:
 	ObjectPtr<RollObject> pRollObj;
 	void Foo()
 	{
+		pRollObj = FindObjectByType<RollObject>();
+
 		auto inst = CreatePtr<GameObject>();
 		if (inst)
 		{
