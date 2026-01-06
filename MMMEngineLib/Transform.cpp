@@ -41,7 +41,7 @@ void MMMEngine::Transform::RemoveChild(ObjectPtr<Transform> child)
 void MMMEngine::Transform::MarkDirty()
 {
 	m_isMatrixDirty = true;
-	for (auto child : m_childs)
+	for (const auto& child : m_childs)
 	{
 		child->MarkDirty(); // 자식들도 더러워졌다고 표시
 	}
@@ -62,7 +62,7 @@ MMMEngine::Transform::~Transform()
 {
 	if (!m_childs.empty())
 	{
-		for (auto child : m_childs)
+		for (const auto& child : m_childs)
 		{
 			child->SetParent(nullptr);
 		}
