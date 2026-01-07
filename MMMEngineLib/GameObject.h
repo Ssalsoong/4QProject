@@ -12,21 +12,40 @@ namespace MMMEngine
 	private:
 		RTTR_ENABLE(Object)
 		RTTR_REGISTRATION_FRIEND
-		ObjectPtr<Transform> m_transform;
-		std::vector<ObjectPtr<Component>> m_components;
 		friend class App;
 		friend class ObjectManager;
 		friend class Scene;
 
+		//SceneRef m_scene;
+
+		ObjectPtr<Transform> m_transform;
+		std::vector<ObjectPtr<Component>> m_components;
+
+		std::string m_tag = "";
+		uint32_t m_layer = -1;
+
+		bool m_active = true;
+		bool m_activeInHierarchy = true; // Hierarchy에서 활성화 여부
+
 		void RegisterComponent(ObjectPtr<Component> comp);
 		void UnRegisterComponent(ObjectPtr<Component> comp);
-
+		void UpdateActiveInHierarchy();
+		void Initialize();
 	protected:
-		GameObject() = default;
+		GameObject();
 		GameObject(std::string name);
 	public:
 		virtual ~GameObject() = default;
 		
+		void SetActive(bool active);
+		void SetTag(const std::string& tag) { m_tag = tag; }
+
+		bool IsActiveSelf() const { return m_active; }
+		bool IsActiveInHierarchy() const { return m_activeInHierarchy; }
+
+		const std::string& GetTag() const { return m_tag; }
+		//const SceneRef GetScene() const { return m_scene; }
+
 		template <typename T>
 		ObjectPtr<T> AddComponent()
 		{
@@ -65,5 +84,9 @@ namespace MMMEngine
 		const std::vector<ObjectPtr<Component>>& GetAllComponents() const { return m_components; }
 
 		ObjectPtr<Transform> GetTransform() { return m_transform; }
+
+		//static ObjectPtr<GameObject> Find(const std::wstring& name);
+		//static ObjectPtr<GameObject> FindWithTag(const std::string& name);
+		//static std::vector<ObjectPtr<GameObject>> FindGameObjectsWithTag(const std::string& name);
 	};
 }

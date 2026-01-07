@@ -37,7 +37,55 @@ void MMMEngine::GameObject::UnRegisterComponent(ObjectPtr<Component> comp)
     }
 }
 
+void MMMEngine::GameObject::Initialize()
+{
+	//transform은 직접 생성 후 m_components에 등록
+	m_transform = CreatePtr<Transform>();
+	m_transform->SetGameObject(SelfPtr(this));
+	m_transform->SetParent(nullptr); // 부모가 없으므로 nullptr로 설정
+
+	RegisterComponent(m_transform); // Transform을 컴포넌트로 등록
+
+	UpdateActiveInHierarchy();
+
+	//s_allGameObjects.push_back(this); // 모든 게임 오브젝트 목록에 추가
+}
+
+void MMMEngine::GameObject::UpdateActiveInHierarchy()
+{
+	if (auto parent = m_transform->GetParent())
+	{
+		m_activeInHierarchy = parent->GetGameObject()->IsActiveInHierarchy() && m_active;
+	}
+	else
+	{
+		m_activeInHierarchy = m_active; // 부모가 없으면 자기 자신만 활성화 여부를 따짐
+	}
+
+	// 자식들의 활성화 상태 갱신
+	for (auto& child : m_transform->m_childs)
+	{
+		child->GetGameObject()->UpdateActiveInHierarchy();
+	}
+}
+
+MMMEngine::GameObject::GameObject()
+{
+	//m_scene = SceneManager::Get() ? SCENE_GET_CURRENTSCENE() : nullptr;
+	//m_scene->RegisterGameObject(this);
+	Initialize();
+}
+
+
 MMMEngine::GameObject::GameObject(std::string name)
 {
 	SetName(name);
+	Initialize();
+}
+
+void MMMEngine::GameObject::SetActive(bool active)
+{
+	m_active = active;
+
+	UpdateActiveInHierarchy();
 }

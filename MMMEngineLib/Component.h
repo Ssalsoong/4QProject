@@ -14,6 +14,7 @@ namespace MMMEngine
 		friend class GameObject;
 
 		ObjectPtr<GameObject> m_gameObject;
+		inline void SetGameObject(ObjectPtr<GameObject> owner) { m_gameObject = owner; }
 	protected:
 		Component() = default;
 		virtual void Initialize() {};
