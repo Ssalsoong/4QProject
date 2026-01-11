@@ -3,6 +3,7 @@
 
 namespace MMMEngine::Player
 {
+    class PakFileReader;
     class PakBytesProvider final : public MMMEngine::IBytesProvider
     {
     public:
