@@ -15,7 +15,7 @@
 using namespace MMMEngine;
 using namespace MMMEngine::Utility;
 
-void Init()
+void Initialize()
 {
 	InputManager::Get().StartUp(MMMEngine::g_pApp->GetWindowHandle());
 
@@ -37,6 +37,15 @@ void Update()
 		//PhysicsManager::Get()->Simulate(fixedDt);
 		//PhysicsManager::Get()->ApplyTransform();
 	});
+}
+
+void Render()
+{
+
+}
+
+void Release()
+{
 
 }
 
@@ -58,7 +67,9 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	//	return -3;
 
 	app.SetProcessHandle(hInstance); //winmain으로 진입하는 경우 hIntance물려주기
-	app.OnInitialize.AddListener<&Init>();
+	app.OnInitialize.AddListener<&Initialize>();
 	app.OnUpdate.AddListener<&Update>();
+	app.OnRender.AddListener<&Render>();
+	app.OnRelease.AddListener<&Release>();
 	app.Run();
 }

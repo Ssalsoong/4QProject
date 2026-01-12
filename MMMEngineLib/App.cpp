@@ -54,7 +54,7 @@ int MMMEngine::Utility::App::Run()
 			OnRender(this);
 		}
 	}
-	OnShutdown(this);
+	OnRelease(this);
 
 	CoUninitialize();
 	return (int)msg.wParam;

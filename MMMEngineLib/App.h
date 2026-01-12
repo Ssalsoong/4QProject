@@ -31,7 +31,7 @@ namespace MMMEngine::Utility
 		void SetTitle(const std::wstring& title);
 
 		Event<App, void(void)> OnInitialize{ this };
-		Event<App, void(void)> OnShutdown{ this };
+		Event<App, void(void)> OnRelease{ this };
 		Event<App, void(void)> OnUpdate{ this };
 		Event<App, void(void)> OnRender{ this };
 		Event<App, void(int,int)> OnWindowInfoChanged{ this };
