@@ -149,8 +149,10 @@
   <ItemGroup>
     <ClInclude Include="App.h" />
     <ClInclude Include="AssetEntry.h" />
+    <ClInclude Include="Behaviour.h" />
     <ClInclude Include="Component.h" />
     <ClInclude Include="Delegates.hpp" />
+    <ClInclude Include="DisplayMode.h" />
     <ClInclude Include="dxtk\Inc\Audio.h" />
     <ClInclude Include="dxtk\Inc\BufferHelpers.h" />
     <ClInclude Include="dxtk\Inc\CommonStates.h" />
@@ -184,6 +186,8 @@
     <ClInclude Include="InputKeyCode.h" />
     <ClInclude Include="MMMInput.h" />
     <ClInclude Include="InputManager.h" />
+    <ClInclude Include="PlayerMove.h" />
+    <ClInclude Include="Resolution.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="MMMTime.h" />
     <ClInclude Include="Object.h" />
@@ -318,6 +322,8 @@
     <ClInclude Include="rttr\variant_sequential_view.h" />
     <ClInclude Include="rttr\wrapper_mapper.h" />
     <ClInclude Include="Scene.h" />
+    <ClInclude Include="SceneManager.h" />
+    <ClInclude Include="ScriptBehaviour.h" />
     <ClInclude Include="SerializableEvent.h" />
     <ClInclude Include="Singleton.hpp" />
     <ClInclude Include="StringHelper.h" />
@@ -327,9 +333,12 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
     </ClInclude>
+    <ClInclude Include="BehaviourManager.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="App.cpp" />
+    <ClCompile Include="Behaviour.cpp" />
+    <ClCompile Include="BehaviourManger.cpp" />
     <ClCompile Include="Component.cpp" />
     <ClCompile Include="dxtk\Src\SimpleMath.cpp" />
     <ClCompile Include="GameObject.cpp" />

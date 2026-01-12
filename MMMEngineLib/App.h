@@ -3,6 +3,8 @@
 #include <string>
 
 #include "Delegates.hpp"
+#include "Resolution.h"
+#include "DisplayMode.h"
 
 namespace MMMEngine::Utility
 {
@@ -12,21 +14,12 @@ namespace MMMEngine::Utility
 	class App
 	{
 	public:
-		enum class DisplayMode
-		{
-			Windowed,           // 일반 창모드
-			BorderlessWindowed, // 경계없는 창모드
-			Fullscreen         // 전체화면 (독점)
-		};
-
 		struct WindowInfo
 		{
 			std::wstring title;
 			LONG width;
 			LONG height;
 			DWORD style;
-			LONG fullscreenWidth;   // 전체화면 해상도
-			LONG fullscreenHeight;
 		};
 
 		struct WindowedRestore
@@ -47,9 +40,6 @@ namespace MMMEngine::Utility
 		int Run();
 		void Quit();
 
-		void SetWindowTitle(const std::wstring& title);
-		void SetDisplayMode(DisplayMode mode);
-		DisplayMode GetDisplayMode() const;
 		void ToggleFullscreen(); // Windowed <-> Fullscreen 토글
 
 		Event<App, void(void)> OnInitialize{ this };
@@ -60,10 +50,19 @@ namespace MMMEngine::Utility
 		Event<App, void(HWND, UINT, WPARAM, LPARAM)> OnBeforeWindowMessage{ this };
 		Event<App, void(HWND, UINT, WPARAM, LPARAM)> OnAfterWindowMessage{ this };
 
+		DisplayMode GetDisplayMode() const;
+
 		const WindowInfo GetWindowInfo() const;
 		HWND GetWindowHandle() const;
 
+		std::vector<Resolution> GetCurrentMonitorResolutions() const;
+		static std::vector<Resolution> GetMonitorResolutionsFromWindow(HWND hWnd);
+
+		void SetWindowTitle(const std::wstring& title);
+		void SetDisplayMode(DisplayMode mode);
+
 		void SetWindowSize(int width, int height);
+		void SetResizable(bool isResizable);
 	protected:
 		LRESULT HandleWindowMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 	private:
@@ -71,10 +70,14 @@ namespace MMMEngine::Utility
 		WindowInfo m_windowInfo;
 		WindowedRestore m_windowedRestore;
 		DisplayMode m_currentDisplayMode;
+		DisplayMode m_previousDisplayMode;
+		bool m_isResizable = true;
+
+		bool m_windowSizeDirty;
+
 		HINSTANCE m_hInstance;
 		HWND m_hWnd;
 
-		bool m_windowSizeDirty;
 
 		bool CreateMainWindow();
 		void SetWindowed();

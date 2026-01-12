@@ -13,9 +13,15 @@
 #include "InputManager.h"
 #include "TimeManager.h"
 #include "ResourceManager.h"
+#include "BehaviourManager.h"
+#include "ObjectManager.h"
+
+#include "PlayerMove.h"
 
 using namespace MMMEngine;
 using namespace MMMEngine::Utility;
+
+ObjPtr<GameObject> g_pPlayer = nullptr;
 
 void Initialize()
 {
@@ -24,39 +30,37 @@ void Initialize()
 
 	ResourceManager::Get().SetResolver(&Player::g_resolver);
 	ResourceManager::Get().SetBytesProvider(&Player::g_bytes);
+	BehaviourManager::Get().StartUp();
+
+	g_pPlayer = Object::NewObject<GameObject>("Player");
+	g_pPlayer->AddComponent<PlayerMove>();
 }
 
 void Update()
 {
 	InputManager::Get().Update();
 	TimeManager::Get().BeginFrame();
+
+	BehaviourManager::Get().InitializeBehaviours();
+	//BehaviourManager::Get().AllSortBehaviours();
+
+	float dt = TimeManager::Get().GetDeltaTime();
+
 	TimeManager::Get().ConsumeFixedSteps([&](float fixedDt)
 	{
-		Application::SetWindowTitle(L"fps : " + std::to_wstring(1.0f / Time::GetDeltaTime()));
-
 		//PhysicsManager::Get()->PreSyncPhysicsWorld();
 		//PhysicsManager::Get()->PreApplyTransform();
-		//BehaviourManager::Get()->BroadCastBehaviourMessage("FixedUpdate");
+		BehaviourManager::Get().BroadCastBehaviourMessage("FixedUpdate");
 		//PhysicsManager::Get()->Simulate(fixedDt);
 		//PhysicsManager::Get()->ApplyTransform();
 	});
 
+	BehaviourManager::Get().BroadCastBehaviourMessage("Update");
 
-	if (Input::GetKeyDown(KeyCode::Space))
-	{
-		static bool isBigSize = false;
+	BehaviourManager::Get().BroadCastBehaviourMessage("LateUpdate");
 
-		isBigSize = !isBigSize;
-
-		if (isBigSize)
-		{
-			Screen::SetResolution(1600, 900);
-;		}
-		else
-		{
-			Screen::SetResolution(1280, 720);
-		}
-	}
+	ObjectManager::Get().UpdateInternalTimer(dt);
+	ObjectManager::Get().ProcessPendingDestroy();
 }
 
 void Render()
@@ -66,7 +70,7 @@ void Render()
 
 void Release()
 {
-
+	BehaviourManager::Get().ShutDown();
 }
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,

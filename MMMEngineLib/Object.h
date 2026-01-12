@@ -100,6 +100,8 @@ namespace MMMEngine
     private:
         template<typename>
         friend struct rttr::wrapper_mapper;
+        template<typename U>
+        friend struct std::hash;
         friend class ObjectManager;
         friend class ObjectSerializer;
         template<typename> friend class ObjPtr;
@@ -233,6 +235,20 @@ namespace MMMEngine
 
         virtual uint32_t GetPtrID() const override { return m_ptrID; }
         virtual uint32_t GetPtrGeneration() const override { return m_ptrGeneration; }
+    };
+}
+
+namespace std
+{
+    template<typename T>
+    struct hash<MMMEngine::ObjPtr<T>>
+    {
+        size_t operator()(const MMMEngine::ObjPtr<T>& p) const noexcept
+        {
+            size_t h1 = std::hash<uint32_t>{}(p.GetPtrID());
+            size_t h2 = std::hash<uint32_t>{}(p.GetPtrGeneration());
+            return h1 ^ (h2 + 0x9e3779b97f4a7c15ull + (h1 << 6) + (h1 >> 2));
+        }
     };
 }
 

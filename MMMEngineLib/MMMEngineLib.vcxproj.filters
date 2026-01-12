@@ -151,6 +151,18 @@
     <Filter Include="헤더 파일\Core\Resource API\Implement\Format">
       <UniqueIdentifier>{ac83eb5d-ca52-4d2e-af3b-ac567d187d39}</UniqueIdentifier>
     </Filter>
+    <Filter Include="헤더 파일\Common">
+      <UniqueIdentifier>{e296e3ca-bfb6-4f05-a670-78d6d9a801f7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="헤더 파일\Core\Behaviour API">
+      <UniqueIdentifier>{ef8554e5-7448-4e9f-9aab-845d6bd3c5bd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="소스 파일\Core\Behaviour API">
+      <UniqueIdentifier>{a2261ff3-b7f4-480e-9137-39b33451370d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="헤더 파일\Core\Behaviour API\Test">
+      <UniqueIdentifier>{ac9a02dc-e43c-4049-af62-b4602150f1e2}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="rttr\access_levels.h">
@@ -684,6 +696,27 @@
     <ClInclude Include="MMMScreen.h">
       <Filter>헤더 파일\Core\Screen API</Filter>
     </ClInclude>
+    <ClInclude Include="SceneManager.h">
+      <Filter>헤더 파일\Core\Scene API</Filter>
+    </ClInclude>
+    <ClInclude Include="Resolution.h">
+      <Filter>헤더 파일\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="DisplayMode.h">
+      <Filter>헤더 파일\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="Behaviour.h">
+      <Filter>헤더 파일\Core\Behaviour API</Filter>
+    </ClInclude>
+    <ClInclude Include="BehaviourManager.h">
+      <Filter>헤더 파일\Core\Behaviour API</Filter>
+    </ClInclude>
+    <ClInclude Include="ScriptBehaviour.h">
+      <Filter>헤더 파일\Core\Behaviour API</Filter>
+    </ClInclude>
+    <ClInclude Include="PlayerMove.h">
+      <Filter>헤더 파일\Core\Behaviour API\Test</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="rttr\constructor.cpp">
@@ -808,6 +841,12 @@
     </ClCompile>
     <ClCompile Include="App.cpp">
       <Filter>소스 파일\Utility</Filter>
+    </ClCompile>
+    <ClCompile Include="Behaviour.cpp">
+      <Filter>소스 파일\Core\Behaviour API</Filter>
+    </ClCompile>
+    <ClCompile Include="BehaviourManger.cpp">
+      <Filter>소스 파일\Core\Behaviour API</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

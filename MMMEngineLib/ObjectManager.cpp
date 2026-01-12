@@ -1,6 +1,6 @@
 #include "ObjectManager.h"
 
-void MMMEngine::ObjectManager::Update(float deltaTime)
+void MMMEngine::ObjectManager::UpdateInternalTimer(float deltaTime)
 {
     size_t i = 0;
     while (i < m_delayedDestroy.size())

@@ -33,9 +33,6 @@ namespace MMMEngine
         std::vector<uint32_t> m_delayedDestroy;   //ÆÄ±« ¿¹¾à ID
         std::vector<uint32_t> m_pendingDestroy;   //¿ÏÀü ÆÄ±« ID
 
-        void Update(float deltaTime);
-
-        void ProcessPendingDestroy();
     public:
         bool IsCreatingObject() const;
 
@@ -177,6 +174,9 @@ namespace MMMEngine
 
         void StartUp();
         void ShutDown();
+
+        void UpdateInternalTimer(float deltaTime);
+        void ProcessPendingDestroy();
 
         ObjectManager() = default;
         ~ObjectManager();

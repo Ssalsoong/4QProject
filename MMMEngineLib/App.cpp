@@ -1,5 +1,6 @@
 #include "App.h"
 #include <wrl/client.h>
+#include <algorithm>
 
 MMMEngine::Utility::App::App()
 	: m_hInstance(GetModuleHandle(NULL))
@@ -7,7 +8,8 @@ MMMEngine::Utility::App::App()
 	, m_isRunning(false)
 	, m_windowSizeDirty(false)
 	, m_currentDisplayMode(DisplayMode::Windowed)
-	, m_windowInfo({ L"MMM Engine Application",1600,900,WS_OVERLAPPEDWINDOW, 1600, 900 })
+	, m_previousDisplayMode(DisplayMode::Windowed)
+	, m_windowInfo({ L"MMM Engine Application",1600,900,WS_OVERLAPPEDWINDOW})
 {
 }
 
@@ -17,7 +19,8 @@ MMMEngine::Utility::App::App(HINSTANCE hInstance)
 	, m_isRunning(false)
 	, m_windowSizeDirty(false)
 	, m_currentDisplayMode(DisplayMode::Windowed)
-	, m_windowInfo({ L"MMM Engine Application",1600,900,WS_OVERLAPPEDWINDOW, 1600, 900 })
+	, m_previousDisplayMode(DisplayMode::Windowed)
+	, m_windowInfo({ L"MMM Engine Application",1600,900,WS_OVERLAPPEDWINDOW})
 {
 }
 
@@ -27,6 +30,7 @@ MMMEngine::Utility::App::App(LPCWSTR title, LONG width, LONG height)
 	, m_isRunning(false)
 	, m_windowSizeDirty(false)
 	, m_currentDisplayMode(DisplayMode::Windowed)
+	, m_previousDisplayMode(DisplayMode::Windowed)
 	, m_windowInfo({ title,width,height,WS_OVERLAPPEDWINDOW })
 {
 }
@@ -37,6 +41,7 @@ MMMEngine::Utility::App::App(HINSTANCE hInstance, LPCWSTR title, LONG width, LON
 	, m_isRunning(false)
 	, m_windowSizeDirty(false)
 	, m_currentDisplayMode(DisplayMode::Windowed)
+	, m_previousDisplayMode(DisplayMode::Windowed)
 	, m_windowInfo({ title,width,height,WS_OVERLAPPEDWINDOW })
 {
 }
@@ -128,6 +133,96 @@ void MMMEngine::Utility::App::SetWindowSize(int width, int height)
 	
 }
 
+void MMMEngine::Utility::App::SetResizable(bool isResizable)
+{
+	if (m_isResizable == isResizable)
+		return; // 변경 사항이 없으면 종료
+
+	m_isResizable = isResizable;
+
+	if (m_hWnd && m_currentDisplayMode == DisplayMode::Windowed)
+	{
+		// 현재 윈도우 스타일을 가져옵니다.
+		DWORD currentStyle = GetWindowLong(m_hWnd, GWL_STYLE);
+
+		if (isResizable)
+		{
+			// 크기 조절을 허용하려면 WS_THICKFRAME 플래그를 추가합니다.
+			currentStyle |= WS_THICKFRAME;
+		}
+		else
+		{
+			// 크기 조절을 막으려면 WS_THICKFRAME 플래그를 제거합니다.
+			currentStyle &= ~WS_THICKFRAME;
+		}
+
+		// 새로운 스타일을 적용합니다.
+		SetWindowLong(m_hWnd, GWL_STYLE, currentStyle);
+
+		// 변경 사항을 적용하고 창의 비클라이언트 영역을 다시 그리도록 합니다.
+		SetWindowPos(
+			m_hWnd,
+			NULL,
+			0, 0,
+			0, 0,
+			SWP_FRAMECHANGED | SWP_NOZORDER | SWP_NOMOVE | SWP_NOSIZE
+		);
+	}
+}
+
+std::vector<MMMEngine::Resolution> MMMEngine::Utility::App::GetCurrentMonitorResolutions() const
+{
+	return GetMonitorResolutionsFromWindow(m_hWnd);
+}
+
+std::vector<MMMEngine::Resolution> MMMEngine::Utility::App::GetMonitorResolutionsFromWindow(HWND hWnd)
+{
+	std::vector<Resolution> resolutions;
+
+	if (!hWnd)
+		return resolutions;
+
+	// 1) 현재 윈도우가 위치한 모니터
+	HMONITOR hMonitor = MonitorFromWindow(hWnd, MONITOR_DEFAULTTONEAREST);
+	if (!hMonitor)
+		return resolutions;
+
+	// 2) 모니터 디바이스 이름 얻기
+	MONITORINFOEXW mi{};
+	mi.cbSize = sizeof(mi);
+	if (!GetMonitorInfoW(hMonitor, &mi))
+		return resolutions;
+
+	// 3) 디스플레이 모드 열거
+	DEVMODEW dm{};
+	dm.dmSize = sizeof(dm);
+
+	for (DWORD i = 0; EnumDisplaySettingsW(mi.szDevice, i, &dm); ++i)
+	{
+		Resolution r{
+			static_cast<int>(dm.dmPelsWidth),
+			static_cast<int>(dm.dmPelsHeight)
+		};
+
+		// 중복 제거
+		if (std::find(resolutions.begin(), resolutions.end(), r) == resolutions.end())
+		{
+			resolutions.push_back(r);
+		}
+	}
+
+	// 4) 정렬 (가로 → 세로)
+	std::sort(resolutions.begin(), resolutions.end(),
+		[](const Resolution& a, const Resolution& b)
+		{
+			if (a.width != b.width)
+				return a.width < b.width;
+			return a.height < b.height;
+		});
+
+	return resolutions;
+}
+
 LRESULT MMMEngine::Utility::App::HandleWindowMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	OnBeforeWindowMessage(this, hWnd, uMsg, wParam, lParam);
@@ -135,6 +230,13 @@ LRESULT MMMEngine::Utility::App::HandleWindowMessage(HWND hWnd, UINT uMsg, WPARA
 	LRESULT result = 0;
 
 	switch (uMsg) {
+	case WM_SYSKEYDOWN:  // Alt + 다른 키 조합
+		if (wParam == VK_RETURN && (lParam & 0x60000000) == 0x20000000)  // Alt+Enter
+		{
+			ToggleFullscreen();
+			return 0;  // 메시지 처리 완료
+		}
+		break;
 	case WM_CLOSE:
 		DestroyWindow(hWnd);
 		break;
@@ -161,11 +263,6 @@ LRESULT MMMEngine::Utility::App::HandleWindowMessage(HWND hWnd, UINT uMsg, WPARA
 	default:
 		result = DefWindowProc(hWnd, uMsg, wParam, lParam);
 		break;
-	}
-
-	if (result == 0)
-	{
-		result = DefWindowProc(hWnd, uMsg, wParam, lParam);
 	}
 
 	OnAfterWindowMessage(this, hWnd, uMsg, wParam, lParam);
@@ -223,6 +320,7 @@ void MMMEngine::Utility::App::SetDisplayMode(DisplayMode mode)
 	if (m_currentDisplayMode == mode)
 		return;
 
+	m_previousDisplayMode = m_currentDisplayMode;
 	m_currentDisplayMode = mode;
 
 	switch (mode)
@@ -239,7 +337,7 @@ void MMMEngine::Utility::App::SetDisplayMode(DisplayMode mode)
 	}
 }
 
-MMMEngine::Utility::App::DisplayMode MMMEngine::Utility::App::GetDisplayMode() const
+MMMEngine::DisplayMode MMMEngine::Utility::App::GetDisplayMode() const
 {
 	return m_currentDisplayMode;
 }
@@ -282,6 +380,11 @@ void MMMEngine::Utility::App::RestoreWindowedState()
 
 void MMMEngine::Utility::App::SetWindowed()
 {
+	if (m_previousDisplayMode == DisplayMode::Fullscreen)
+	{
+		ChangeDisplaySettings(NULL, 0);
+	}
+
 	if (m_currentDisplayMode != DisplayMode::Windowed)
 	{
 		// 이전 상태 복원
@@ -310,9 +413,7 @@ void MMMEngine::Utility::App::SetWindowed()
 void MMMEngine::Utility::App::SetBorderlessWindowed()
 {
 	if (m_currentDisplayMode == DisplayMode::Windowed)
-	{
 		SaveWindowedState();
-	}
 
 	DWORD style = WS_POPUP | WS_VISIBLE;
 	SetWindowLong(m_hWnd, GWL_STYLE, style);
@@ -322,51 +423,41 @@ void MMMEngine::Utility::App::SetBorderlessWindowed()
 	MONITORINFO monitorInfo = { sizeof(MONITORINFO) };
 	GetMonitorInfo(hMonitor, &monitorInfo);
 
-	// 사용자 지정 해상도 사용 (중앙 정렬)
-	int monitorWidth = monitorInfo.rcMonitor.right - monitorInfo.rcMonitor.left;
-	int monitorHeight = monitorInfo.rcMonitor.bottom - monitorInfo.rcMonitor.top;
-	int x = monitorInfo.rcMonitor.left + (monitorWidth - m_windowInfo.fullscreenWidth) / 2;
-	int y = monitorInfo.rcMonitor.top + (monitorHeight - m_windowInfo.fullscreenHeight) / 2;
+	const RECT& fullArea = monitorInfo.rcMonitor;
 
-	SetWindowPos(m_hWnd, HWND_TOP, x, y,
-		m_windowInfo.fullscreenWidth,
-		m_windowInfo.fullscreenHeight,
+	int x = fullArea.left;
+	int y = fullArea.top;
+	int width = fullArea.right - fullArea.left;
+	int height = fullArea.bottom - fullArea.top;
+
+	SetWindowPos(m_hWnd, HWND_TOP, x, y, width, height,
 		SWP_FRAMECHANGED | SWP_SHOWWINDOW);
 
-	m_windowSizeDirty = true;
+	if (m_windowInfo.width != width || m_windowInfo.height != height) {
+		m_windowInfo.width = width;
+		m_windowInfo.height = height;
+	}
 }
 
 void MMMEngine::Utility::App::SetFullscreen()
 {
-	// 현재 창모드라면 상태 저장
 	if (m_currentDisplayMode == DisplayMode::Windowed)
-	{
 		SaveWindowedState();
-	}
 
-	// 독점 전체화면 스타일
 	DWORD style = WS_POPUP | WS_VISIBLE;
 	SetWindowLong(m_hWnd, GWL_STYLE, style);
 	SetWindowLong(m_hWnd, GWL_EXSTYLE, WS_EX_APPWINDOW | WS_EX_TOPMOST);
 
-	// 주 모니터 전체 화면
-	int screenWidth = GetSystemMetrics(SM_CXSCREEN);
-	int screenHeight = GetSystemMetrics(SM_CYSCREEN);
+	DEVMODE dm = {};
+	dm.dmSize = sizeof(dm);
+	dm.dmPelsWidth = m_windowInfo.width;
+	dm.dmPelsHeight = m_windowInfo.height;
+	dm.dmBitsPerPel = 32;
+	dm.dmFields = DM_BITSPERPEL | DM_PELSWIDTH | DM_PELSHEIGHT;
+	ChangeDisplaySettings(&dm, CDS_FULLSCREEN);
 
-	SetWindowPos(m_hWnd, HWND_TOPMOST,
-		0, 0, screenWidth, screenHeight,
+	SetWindowPos(m_hWnd, HWND_TOPMOST, 0, 0, m_windowInfo.width, m_windowInfo.height,
 		SWP_FRAMECHANGED | SWP_SHOWWINDOW);
-
-	// 디스플레이 설정 변경 (선택사항)
-	/*
-	DEVMODE dmScreenSettings = {};
-	dmScreenSettings.dmSize = sizeof(dmScreenSettings);
-	dmScreenSettings.dmPelsWidth = screenWidth;
-	dmScreenSettings.dmPelsHeight = screenHeight;
-	dmScreenSettings.dmBitsPerPel = 32;
-	dmScreenSettings.dmFields = DM_BITSPERPEL | DM_PELSWIDTH | DM_PELSHEIGHT;
-	ChangeDisplaySettings(&dmScreenSettings, CDS_FULLSCREEN);
-	*/
 }
 
 
