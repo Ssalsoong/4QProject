@@ -151,11 +151,11 @@
     <Filter Include="소스 파일\Core\Behaviour API">
       <UniqueIdentifier>{a2261ff3-b7f4-480e-9137-39b33451370d}</UniqueIdentifier>
     </Filter>
-    <Filter Include="헤더 파일\Core\Behaviour API\Test">
-      <UniqueIdentifier>{ac9a02dc-e43c-4049-af62-b4602150f1e2}</UniqueIdentifier>
-    </Filter>
     <Filter Include="소스 파일\Core\Resource API">
       <UniqueIdentifier>{b4e5e7a3-5660-4bc1-8594-1f4c1e227717}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="소스 파일\Core\GlobalRegistry">
+      <UniqueIdentifier>{217c690e-d5d9-466a-adc0-74b9d1005041}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -696,9 +696,6 @@
     <ClInclude Include="ScriptBehaviour.h">
       <Filter>헤더 파일\Core\Behaviour API</Filter>
     </ClInclude>
-    <ClInclude Include="PlayerMove.h">
-      <Filter>헤더 파일\Core\Behaviour API\Test</Filter>
-    </ClInclude>
     <ClInclude Include="Export.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
@@ -840,7 +837,7 @@
       <Filter>소스 파일\Core\Resource API</Filter>
     </ClCompile>
     <ClCompile Include="GlobalRegistry.cpp">
-      <Filter>소스 파일</Filter>
+      <Filter>소스 파일\Core\GlobalRegistry</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

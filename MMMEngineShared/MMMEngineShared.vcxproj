@@ -192,7 +192,6 @@
     <ClInclude Include="InputKeyCode.h" />
     <ClInclude Include="MMMInput.h" />
     <ClInclude Include="InputManager.h" />
-    <ClInclude Include="PlayerMove.h" />
     <ClInclude Include="Resolution.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="MMMTime.h" />

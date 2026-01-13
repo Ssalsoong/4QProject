@@ -16,8 +16,6 @@
 #include "BehaviourManager.h"
 #include "ObjectManager.h"
 
-#include "PlayerMove.h"
-
 using namespace MMMEngine;
 using namespace MMMEngine::Utility;
 
@@ -31,7 +29,6 @@ void Initialize()
 	BehaviourManager::Get().StartUp();
 
 	g_pPlayer = Object::NewObject<GameObject>("Player");
-	g_pPlayer->AddComponent<PlayerMove>();
 
 	Object::Destroy(g_pPlayer,5.0f);
 }
