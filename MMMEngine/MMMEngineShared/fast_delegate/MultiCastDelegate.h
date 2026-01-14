@@ -1,0 +1,174 @@
+/*
+
+	Copyright (C) 2017 by Sergey A Kryukov: derived work
+	http://www.SAKryukov.org
+	http://www.codeproject.com/Members/SAKryukov
+
+	Based on original work by Sergey Ryazanov:
+	"The Impossibly Fast C++ Delegates", 18 Jul 2005
+	https://www.codeproject.com/articles/11015/the-impossibly-fast-c-delegates
+
+	MIT license:
+	http://en.wikipedia.org/wiki/MIT_License
+
+	Original publication: https://www.codeproject.com/Articles/1170503/The-Impossibly-Fast-Cplusplus-Delegates-Fixed
+
+*/
+
+#pragma once
+#include "Delegate.h"
+#include <list>
+#include <functional>
+
+namespace SA {
+
+	template<typename RET, typename ...PARAMS>
+	class multicast_delegate<RET(PARAMS...)> final : private delegate_base<RET(PARAMS...)> {
+	public:
+
+		multicast_delegate() = default;
+		~multicast_delegate() {
+			for (auto& element : invocationList) delete element;
+			invocationList.clear();
+		} //~multicast_delegate
+
+		bool isNull() const { return invocationList.size() < 1; }
+		bool operator ==(void* ptr) const {
+			return (ptr == nullptr) && this->isNull();
+		} //operator ==
+		bool operator !=(void* ptr) const {
+			return (ptr != nullptr) || (!this->isNull());
+		} //operator !=
+
+		size_t size() const { return invocationList.size(); }
+
+		multicast_delegate& operator =(const multicast_delegate&) = delete;
+		multicast_delegate(const multicast_delegate&) = delete;
+
+		bool operator ==(const multicast_delegate& another) const {
+			if (invocationList.size() != another.invocationList.size()) return false;
+			auto anotherIt = another.invocationList.begin();
+			for (auto it = invocationList.begin(); it != invocationList.end(); ++it)
+				if (**it != **anotherIt) return false;
+			return true;
+		} //==
+		bool operator !=(const multicast_delegate& another) const { return !(*this == another); }
+
+		bool operator ==(const delegate<RET(PARAMS...)>& another) const {
+			if (isNull() && another.isNull()) return true;
+			if (another.isNull() || (size() != 1)) return false;
+			return (another.invocation == **invocationList.begin());
+		} //==
+		bool operator !=(const delegate<RET(PARAMS...)>& another) const { return !(*this == another); }
+
+		multicast_delegate& operator +=(const multicast_delegate& another) {
+			for (auto& item : another.invocationList) // clone, not copy; flattens hierarchy:
+				this->invocationList.push_back(new typename delegate_base<RET(PARAMS...)>::InvocationElement(item->object, item->stub));
+			return *this;
+		} //operator +=
+
+		template <typename LAMBDA> // template instantiation is not neededm, will be deduced/inferred:
+		multicast_delegate& operator +=(const LAMBDA & lambda) {
+			delegate<RET(PARAMS...)> d = delegate<RET(PARAMS...)>::template create<LAMBDA>(lambda);
+			return *this += d;
+		} //operator +=
+
+		multicast_delegate& operator +=(const delegate<RET(PARAMS...)>& another) {
+			if (another.isNull()) return *this;
+			this->invocationList.push_back(new typename delegate_base<RET(PARAMS...)>::InvocationElement(another.invocation.object, another.invocation.stub));
+			return *this;
+		} //operator +=
+
+		// will work even if RET is void, return values are ignored:
+		// (for handling return values, see operator(..., handler))
+		//void operator()(PARAMS... arg) const {
+		//	for (auto& item : invocationList)
+		//		(*(item->stub))(item->object, arg...);
+		//} //operator()
+
+		RET operator()(PARAMS... arg) const {
+			if constexpr (std::is_same_v<RET, void>) {
+				// void 일 때 동작
+				for (auto& item : invocationList) {
+					(*(item->stub))(item->object, arg...); // 호출
+				}
+			}
+			else {
+				RET result{};
+				for (auto& item : invocationList) {
+					// 마지막 호출 결과를 result에 저장
+					result = (*(item->stub))(item->object, arg...);
+				}
+				return result; // 마지막 결과 반환
+			}
+		} //operator()
+
+		template<typename HANDLER>
+		void operator()(PARAMS... arg, HANDLER handler) const {
+			size_t index = 0;
+			for (auto& item : invocationList) {
+				RET value = (*(item->stub))(item->object, arg...);
+				handler(index, &value);
+				++index;
+			} //loop
+		} //operator()
+
+		void operator()(PARAMS... arg, delegate<void(size_t, RET*)> handler) const {
+			operator()<decltype(handler)>(arg..., handler);
+		} //operator()
+		void operator()(PARAMS... arg, std::function<void(size_t, RET*)> handler) const {
+			operator()<decltype(handler)>(arg..., handler);
+		} //operator()
+
+	private:
+
+		std::list<typename delegate_base<RET(PARAMS...)>::InvocationElement *> invocationList;
+
+	// === MMMEnigine Code === //
+	public:
+		// -= operator: Remove the first matching delegate
+		multicast_delegate& operator -=(const delegate<RET(PARAMS...)>& another) {
+			if (another.isNull()) return *this;
+
+			// Find and remove the first matching element
+			for (auto it = invocationList.begin(); it != invocationList.end(); ++it) {
+				if (**it == another.invocation) {
+					delete* it;  // Free memory
+					invocationList.erase(it);
+					break;  // Remove only the first match for safety
+				}
+			}
+			return *this;
+		} //operator -=
+
+		// Remove all instances of a matching delegate (for when duplicates exist)
+		size_t removeAll(const delegate<RET(PARAMS...)>& another) {
+			if (another.isNull()) return 0;
+
+			size_t removedCount = 0;
+			auto it = invocationList.begin();
+			while (it != invocationList.end()) {
+				if (**it == another.invocation) {
+					delete* it;
+					it = invocationList.erase(it);
+					++removedCount;
+				}
+				else {
+					++it;
+				}
+			}
+			return removedCount;
+		} //removeAll
+
+		// Clear all listeners
+		void clear() {
+			for (auto& element : invocationList) delete element;
+			invocationList.clear();
+		} //clear
+
+	// === end of MMMEngine Code === //
+
+	}; //class multicast_delegate
+
+} /* namespace SA */
+

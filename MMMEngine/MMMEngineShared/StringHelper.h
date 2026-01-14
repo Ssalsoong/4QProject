@@ -1,0 +1,15 @@
+#pragma once
+#include "Export.h"
+#include <string>
+#include <vector>
+
+namespace MMMEngine::Utility
+{
+	class MMMENGINE_API StringHelper
+	{
+	public:
+		static std::vector<std::string> Split(const std::string str, char delim);
+		static std::wstring StringToWString(const std::string& str);
+		static std::string WStringToString(const std::wstring& wstr);
+	};
+}
